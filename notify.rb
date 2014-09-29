@@ -2,6 +2,7 @@
 
 require 'mechanize'
 require 'yaml'
+require 'net/smtp'
 
 CATEGORIES = %w{ hindi telugu tamil malayalam }
 DOMAIN     = 'http://www.einthusan.com'
@@ -42,8 +43,6 @@ def scrape
       $new_movies[lang] = movie_hash
     end
   end
-
-  write_movie_file($scraped_movies)
 end
 
 def existing_movie_file_contents
@@ -52,13 +51,41 @@ def existing_movie_file_contents
   end
 end
 
+def format_email_message
+  message = ''
+  message << "Subject: New movies from Einthusan\n"
+  $new_movies.each do |lang, movie|
+    message << "Language: #{lang.capitalize}\n"
+    message << "Movie Name: #{movie['name']}\n"
+    message << "Wiki: #{movie['wiki']}\n"
+    message << "Watch: #{movie['link']}\n"
+    message << "Uploaded on: #{movie['created_on']}\n"
+    message << "\n#{'*' * 80}\n"
+  end
+  message
+end
+
+def send_mail
+  to_addresses = ENV['EINTHUSAN_LIST'].split(',')
+
+  smtp = Net::SMTP.new 'smtp.gmail.com', 587
+  smtp.enable_starttls
+  smtp.start('gmail.com', ENV['SARATH_ALERTS_EMAIL'], ENV['SARATH_ALERTS_PASSWORD'], :login) do |smtp|
+    smtp.send_message format_email_message.to_s,
+                      ENV['SARATH_ALERTS_EMAIL'],
+                      to_addresses
+  end
+end
+
 
 
 existing_movie_file_contents
 scrape
+
 unless $new_movies.empty?
   puts "You've been served an email!"
-  puts $new_movies.to_yaml
+  write_movie_file($scraped_movies)
+  send_mail
 else
   puts "nothing uploaded"
 end
