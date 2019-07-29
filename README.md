@@ -22,5 +22,5 @@ export SARATH_ALERTS_EMAIL=yourmeail@gmail.com
 export SARATH_ALERTS_PASSWORD=yourpassord
 
 export EINTHUSAN_LIST=subscriber1@gmail.com,subscriber2@gmail.com
-
+# [Einthusan](https://aapks.com/apk/einthusan/)
 save the above text and source your shell and that should be it!
